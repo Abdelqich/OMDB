@@ -1,9 +1,11 @@
 const detailDiv = document.getElementById('movie-detail');
-
 const params = new URLSearchParams(window.location.search);
 const movieId = params.get('id');
 
+console.log("Gevonden movieId:", movieId);
+
 async function fetchMovieDetail(id) {
+  detailDiv.innerHTML = `<p>Laden...</p>`;
   try {
     const response = await fetch(`http://www.omdbapi.com/?i=${id}&apikey=f5c24044`);
     const data = await response.json();
@@ -27,4 +29,8 @@ async function fetchMovieDetail(id) {
   }
 }
 
-fetchMovieDetail(movieId);
+if (movieId) {
+  fetchMovieDetail(movieId);
+} else {
+  detailDiv.innerHTML = `<p>Geen film ID gevonden in de URL.</p>`;
+}
