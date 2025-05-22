@@ -11,6 +11,7 @@ const pageTitle = document.getElementById('page-title');
 // Voeg klikfunctionaliteit toe aan h1
 pageTitle.addEventListener('click', goToHome);
 
+// Sorteerfilms op basis van het geselecteerde criterium
 function sortMovies(movies, criteria) {
   switch (criteria) {
     case 'title-asc':
@@ -26,6 +27,7 @@ function sortMovies(movies, criteria) {
   }
 }
 
+// Haal films op via de API en pas filters en sortering toe
 async function fetchMovies(searchTerm = new Date().getFullYear().toString(), sortCriteria = 'year-desc', filter = '') {
   try {
     loadingDiv.style.display = 'block';
@@ -41,10 +43,12 @@ async function fetchMovies(searchTerm = new Date().getFullYear().toString(), sor
     if (data.Response === "True") {
       let movies = data.Search;
 
+      // Filter op jaartal indien ingevuld
       if (filterYear.value) {
         movies = movies.filter(movie => movie.Year.slice(0, 4) === filterYear.value);
       }
 
+      // Filter op minimale rating indien ingevuld
       if (filterRating.value) {
         const ratingThreshold = parseFloat(filterRating.value);
         const ratedMovies = await Promise.all(movies.map(async movie => {
@@ -57,18 +61,10 @@ async function fetchMovies(searchTerm = new Date().getFullYear().toString(), sor
 
       movies = sortMovies(movies, sortCriteria);
 
+      // Toon resultaten op het scherm
       movieDiv.innerHTML = movies.map(movie => `
         <div class="movie-item">
-          <h3 style="
-            color: #1915f1;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: normal;">  
+          <h3 style="...">  
             ${movie.Title} (${movie.Year})
           </h3>
           <img 
@@ -86,6 +82,7 @@ async function fetchMovies(searchTerm = new Date().getFullYear().toString(), sor
         </div>
       `).join('');
 
+      // Voeg event listeners toe aan alle "Favoriet"-knoppen
       document.querySelectorAll('.fav-btn').forEach(button => {
         button.addEventListener('click', () => {
           const id = button.getAttribute('data-id');
@@ -107,6 +104,7 @@ async function fetchMovies(searchTerm = new Date().getFullYear().toString(), sor
   }
 }
 
+// Laad afbeeldingen pas als ze in beeld komen (lazy loading)
 function lazyLoadImages() {
   const images = document.querySelectorAll('img.lazy-img');
   const options = {
@@ -129,6 +127,7 @@ function lazyLoadImages() {
   images.forEach(img => observer.observe(img));
 }
 
+// Behandel zoekactie vanuit de gebruiker
 function handleSearch() {
   const term = searchInput.value.trim();
   if (!term) return alert('Vul een filmtitel in.');
@@ -138,6 +137,7 @@ function handleSearch() {
   fetchMovies(term, sortSelect.value, filterType.value);
 }
 
+// Event listeners voor zoekknop, enter, filters en sorteren
 searchBtn.addEventListener('click', handleSearch);
 searchInput.addEventListener('keypress', e => e.key === 'Enter' && handleSearch());
 
@@ -156,6 +156,7 @@ filterRating.addEventListener('input', () => {
   fetchMovies(term, sortSelect.value, filterType.value);
 });
 
+// Voeg een film toe aan favorieten in localStorage
 function addToFavorites(id) {
   try {
     const existing = JSON.parse(localStorage.getItem('favorites')) || [];
@@ -171,6 +172,7 @@ function addToFavorites(id) {
   }
 }
 
+// Controleer of een film al in favorieten zit
 function isFavorite(id) {
   const favorites = JSON.parse(localStorage.getItem('favorites')) || [];
   return favorites.includes(id);
@@ -184,6 +186,7 @@ const themes = ['light', 'dark'];
 const savedTheme = localStorage.getItem('theme') || 'light';
 document.body.classList.add(savedTheme);
 
+// Wissel tussen licht en donker thema
 themeToggle.addEventListener('click', () => {
   const currentTheme = themes.find(t => document.body.classList.contains(t)) || 'light';
   const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
@@ -191,7 +194,7 @@ themeToggle.addEventListener('click', () => {
   localStorage.setItem('theme', newTheme);
 });
 
-// Ga naar home en reset filters
+// Ga naar homepagina en reset filters en inputvelden
 function goToHome() {
   searchInput.value = '';
   filterYear.value = '';
@@ -203,6 +206,6 @@ function goToHome() {
 }
 window.goToHome = goToHome;
 
-// Initiale fetch bij laden
+// Initiale data ophalen bij het laden van de pagina
 const currentYear = new Date().getFullYear().toString();
 fetchMovies(currentYear, 'year-desc', '', currentYear);
