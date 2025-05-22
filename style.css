@@ -4,8 +4,8 @@
   font-weight: 400;
 
   color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  color: rgb(0, 0, 0);
+  background-color: #f0f8ff;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -15,11 +15,11 @@
 
 a {
   font-weight: 500;
-  color: #646cff;
+  color: #1915f1;
   text-decoration: inherit;
 }
 a:hover {
-  color: #535bf2;
+  color: #1915f1;
 }
 
 body {
@@ -28,18 +28,44 @@ body {
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  flex-direction: column;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+#page-title {
+  font-size: 3rem;
+  font-weight: 700;
+  text-align: center;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  letter-spacing: 1px;
+  background: linear-gradient(90deg, #1915f1, #1915f1, #1915f1);
+  background-size: 200% auto;
+  color: transparent;
+
+  -webkit-background-clip: text;
+  background-clip: text;
+
+  -webkit-text-fill-color: transparent;
+  text-shadow: 2px 2px 8px rgba(25, 21, 241, 0.4);
+  animation: gradientMove 5s linear infinite;
 }
+
+@keyframes gradientMove {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 100% 50%;
+  }
+}
+
 
 #app {
   max-width: 1280px;
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
+  width: 100%;
 }
 
 .logo {
@@ -49,7 +75,7 @@ h1 {
   transition: filter 300ms;
 }
 .logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
+  filter: drop-shadow(0 0 2em #1915f1aa);
 }
 .logo.vanilla:hover {
   filter: drop-shadow(0 0 2em #f7df1eaa);
@@ -63,139 +89,320 @@ h1 {
   color: #888;
 }
 
+/* Buttons */
 button {
+  background-color: #1915f1;
+  color: white;
+  padding: 0.6rem 1.2rem;
   border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
+  border: none;
+  font-weight: 600;
   cursor: pointer;
-  transition: border-color 0.25s;
+  transition: background-color 0.3s ease, transform 0.15s ease;
 }
+
 button:hover {
-  border-color: #646cff;
+  background-color: #1915f1;
+  transform: scale(1.05);
 }
+
+button:active {
+  transform: scale(0.95);
+}
+
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
-}
-/* Filmresultaten in blok tonen*/
-#movie{
+/* Zoekcontainer */
+.zoek-container {
   display: flex;
-  flex-wrap: wrap;
   justify-content: center;
-  gap: 1rem;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  padding: 0.75rem 1rem;
+  background-color: rgba(25, 21, 241, 0.1);
+  border-radius: 12px;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.zoek-container input {
+  flex-grow: 1;
+  padding: 0.75rem 1rem;
+  font-size: 1.1rem;
+  border: 1px solid #1915f1;
+  border-radius: 8px;
+  outline-offset: 2px;
+  color: rgb(2, 2, 2);
+  background-color: #ffffff;
+}
+
+.zoek-container button {
+  min-width: 100px;
+  background-color: #1915f1;
+  color: white;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.15s ease;
+}
+
+.zoek-container button:hover {
+  background-color: #1915f1;
+  transform: scale(1.05);
+}
+
+#controls select,
+#controls input[type="number"] {
+  padding: 0.4rem 0.8rem;
+  font-size: 1rem;
+  border: 1px solid #1915f1;
+  border-radius: 8px;
+  background-color: #ffffff;
+  color: #000000;
+  margin-left: 10px;
+  transition: border 0.2s ease, background-color 0.2s ease;
+  height: 40px;
+  box-sizing: border-box;
+}
+
+#controls select:focus,
+#controls input[type="number"]:focus {
+  outline: none;
+  border-color: #1915f1;
+  background-color: #a9a6a6;
+}
+
+#controls input::placeholder {
+  color: #999494;
+}
+
+/* Filmresultaten grid */
+#movie {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 2rem;
   margin-top: 2rem;
+  padding: 0 1rem;
+  max-width: 1200px; /* deze limiet maakt 'm niet te breed */
+  margin-left: auto;
+  margin-right: auto;
 }
-.movie-item{
-  background-color: #ffffff10;
-  border: 1px solid #444;
-  border-radius:12px;
+
+
+@media (max-width: 900px) {
+  #movie {
+    grid-template-columns: repeat(2, 1fr); /* 2 kolommen op medium scherm */
+    max-width: 600px;
+  }
+}
+
+@media (max-width: 480px) {
+  #movie {
+    grid-template-columns: 1fr; /* 1 kolom op klein scherm */
+    max-width: 320px;
+  }
+}
+
+#favorites {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 20px;
+  justify-items: center;
+  margin-top: 20px;
+  padding: 0 1rem;
+}
+#terugnaarzoeken {
+  margin: 1rem 0;
+  padding: 0.8rem 1.5rem;
+  font-size: 1rem;
+  background-color: #1915f1;
+  color: white;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  display: inline-block;
+}
+
+#terugnaarzoeken:hover {
+  background-color: #0f0dc1;
+}
+
+/* Movie items styling */
+.movie-item {
+  background-color: rgba(255, 255, 255, 0.85);
+  border: 1px solid #1915f1;
+  border-radius: 12px;
   padding: 1rem;
-  margin: 1rem;
-  width: 200px;
+  color: #131212;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
   text-align: center;
-  
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%; /* maakt dat ze even hoog kunnen zijn */
+  min-height: 420px; /* of wat je wilt als minimale gelijke hoogte */
+  width: 100%; /* Zorgt dat de movie-item de volledige breedte van de gridcel gebruikt */
+  box-sizing: border-box; 
 }
-.movie-item img{
+
+
+.movie-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 15px rgba(0,0,0,0.3);
+}
+
+.movie-item img {
+  display: block;
+  margin: 0 auto 0.5rem auto; /* horizontaal centreren + kleine marge onder de afbeelding */
   border-radius: 4px;
+  width: 150px;
+  height: 225px;
+  object-fit: cover;
+}
+
+
+.movie-item h3 {
+  color: #1915f1;
+  font-weight: 700;
   margin-bottom: 0.5rem;
+  height: 6.3em; 
+  line-height: 2.1em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  display: -webkit-box;       
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+
+  display: box;               
+  box-orient: vertical;
+  line-clamp: 3;              
+  white-space: normal;
 }
-.movie-item button{
-  margin: 0.5rem;
+
+
+.movie-item button {
+  margin: 0.5rem 0;
   width: 100%;
+  font-weight: 600;
 }
-#searchInput{
-  padding: 0.5rem;
-  font-size: 1rem;
-  width: 250px;
-  max-width: 90%;
-  margin: 1rem;
 
-}
-#searchBtn{
-  padding: 0.5rem 1rem;
-  font-size: 1rem;
-
-}
-#movie-detail{
+/* Movie detail pagina styling */
+#movie-detail {
   max-width: 600px;
   margin: 2rem auto;
   background-color: #f1f1f1;
   color: #000;
-  padding:2rem ;
+  padding: 2rem;
   border-radius: 8px;
   text-align: center;
 }
-#movie-detail img{
+
+#movie-detail img {
   max-width: 100%;
   border-radius: 8px;
   margin-bottom: 1rem;
 }
+
+/* Controls container */
 #controls {
   display: flex;
-  align-items: center;      
-  justify-content: flex-start; 
-  gap: 10px;                
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
   padding: 1rem;
 }
 
-.zoek-container {
-  display: flex;
-  margin-bottom: 2rem;
-}
-.zoek-container input{
-  padding: 0.5rem;
-  font-size: 1rem;
-  width: 300px;
-}
-.zoek-container button{
-  padding: 0.5rem 1rem;
-  font-size: 1rem;
-}
-
-.movie-grid {
-  display: grid;
-  grid-template-columns: repeat(6,1fr);
-  gap: 1rem;
-  padding: 1rem;
-}
-.movie-item{
-  background-color: #706d6d6c;
-  padding: 0.5rem;
-  border-radius: 8px;
-  text-align: center;
-  color: white;
-}
+/* Body thema styling */
+/* Algemene thema's */
 body.light {
-  background-color: #f9f9f9;
-  color: #111;
+  background-color: #fdfdfd;
+  color: #000;
 }
 
 body.dark {
-  background-color: #111;
-  color: #f9f9f9;
+  background-color: #121212;
+  color: #f0f0f0;
 }
 
-button {
-  margin: 10px;
-  padding: 8px 12px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
+/* Specifiek voor favorietenpagina */
+body.favorites.light {
+  background-color: #f0f8ff;
 }
+
+body.favorites.dark {
+  background-color: #1c1c2c;
+}
+
+
+#topControls {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 1rem;
+  align-items: center;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+nav a {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  font-size: 1.2rem;
+  border-radius: 8px;
+  background-color: rgba(25, 21, 241, 0.1);
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+nav a:hover {
+  background-color: #1915f1;
+  color: white;
+}
+#themeToggle {
+  padding: 0.5rem 1rem;
+  font-size: 1.2rem;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  background-color: rgba(25, 21, 241, 0.1);
+  color: inherit;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+#themeToggle:hover {
+  background-color: #1915f1;
+  color: white;
+}
+
+/* Responsiveness */
+@media (max-width: 600px) {
+  #controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  #controls select,
+  #controls input[type="number"] {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .zoek-container {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .zoek-container input,
+  .zoek-container button {
+    width:100%
+  }}

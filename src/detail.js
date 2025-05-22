@@ -2,7 +2,9 @@ const detailDiv = document.getElementById('movie-detail');
 const params = new URLSearchParams(window.location.search);
 const movieId = params.get('id');
 
-console.log("Gevonden movieId:", movieId);
+// Thema toepassen vanuit localStorage
+const savedTheme = localStorage.getItem('theme') || 'light';
+document.body.classList.add(savedTheme);
 
 async function fetchMovieDetail(id) {
   detailDiv.innerHTML = `<p>Laden...</p>`;
@@ -11,9 +13,17 @@ async function fetchMovieDetail(id) {
     const data = await response.json();
 
     if (data.Response === "True") {
+      // Check voor poster fallback
+      const posterUrl = (data.Poster && data.Poster !== 'N/A') ? data.Poster : '/no.png';
+
       detailDiv.innerHTML = `
         <h2>${data.Title} (${data.Year})</h2>
-        <img src="${data.Poster}" alt="${data.Title}" width="200" />
+        <img 
+          src="${posterUrl}" 
+          alt="Poster van ${data.Title}" 
+          width="200"
+          onerror="this.onerror=null;this.src='/no.png';"
+        />
         <p><strong>Genre:</strong> ${data.Genre}</p>
         <p><strong>Plot:</strong> ${data.Plot}</p>
         <p><strong>Actors:</strong> ${data.Actors}</p>

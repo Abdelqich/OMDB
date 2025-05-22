@@ -6,11 +6,13 @@ const filterType = document.getElementById('filterType');
 const loadingDiv = document.getElementById('loading');
 const filterYear = document.getElementById('filterYear');
 const filterRating = document.getElementById('filterRating');
+const pageTitle = document.getElementById('page-title');
 
-
+// Voeg klikfunctionaliteit toe aan h1
+pageTitle.addEventListener('click', goToHome);
 
 function sortMovies(movies, criteria) {
-  switch(criteria) {
+  switch (criteria) {
     case 'title-asc':
       return movies.sort((a, b) => a.Title.localeCompare(b.Title));
     case 'title-desc':
@@ -24,104 +26,148 @@ function sortMovies(movies, criteria) {
   }
 }
 
-async function fetchMovies(searchTerm = 'spider-man', sortCriteria = 'title-asc',filter = '') {
+async function fetchMovies(searchTerm = new Date().getFullYear().toString(), sortCriteria = 'year-desc', filter = '') {
   try {
-    loadingDiv.style.display = 'block'; 
-    let url = `http://www.omdbapi.com/?s=${encodeURIComponent(searchTerm)}&apikey=f5c24044`;
-    if (filter) {
-      url += `&type=${filter}`;
-    }
+    loadingDiv.style.display = 'block';
+    let url = `https://www.omdbapi.com/?s=${encodeURIComponent(searchTerm)}&apikey=f5c24044`;
+
+    const yearValue = filterYear.value.trim();
+    if (filter) url += `&type=${filter}`;
+    if (yearValue) url += `&y=${yearValue}`;
+
     const response = await fetch(url);
     const data = await response.json();
 
     if (data.Response === "True") {
       let movies = data.Search;
+
       if (filterYear.value) {
-      movies = movies.filter(movie => {
-      // Soms is year een string zoals "2010–2015", pak eerste 4 cijfers
-      const year = movie.Year.slice(0,4);
-      return year === filterYear.value;
-    });
-}
+        movies = movies.filter(movie => movie.Year.slice(0, 4) === filterYear.value);
+      }
+
+      if (filterRating.value) {
+        const ratingThreshold = parseFloat(filterRating.value);
+        const ratedMovies = await Promise.all(movies.map(async movie => {
+          const detailRes = await fetch(`https://www.omdbapi.com/?i=${movie.imdbID}&apikey=f5c24044`);
+          const details = await detailRes.json();
+          return { ...movie, imdbRating: parseFloat(details.imdbRating) || 0 };
+        }));
+        movies = ratedMovies.filter(movie => movie.imdbRating >= ratingThreshold);
+      }
+
       movies = sortMovies(movies, sortCriteria);
 
       movieDiv.innerHTML = movies.map(movie => `
         <div class="movie-item">
-          <h3>${movie.Title} (${movie.Year})</h3>
-          <img src="${movie.Poster !== 'N/A' ? movie.Poster : '/no-poster.png'}" alt="Poster van ${movie.Title}" width="150" />
+          <h3 style="
+            color: #1915f1;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: normal;">  
+            ${movie.Title} (${movie.Year})
+          </h3>
+          <img 
+            class="lazy-img"
+            src="/no.png" 
+            data-src="${movie.Poster !== 'N/A' ? movie.Poster : '/no.png'}" 
+            alt="Poster van ${movie.Title}" 
+            width="150"
+            onerror="this.onerror=null;this.src='/no.png';"
+          />
           <button onclick="window.location.href='details.html?id=${movie.imdbID}'">Bekijk details</button>
           <button class="fav-btn" data-id="${movie.imdbID}">
             ${isFavorite(movie.imdbID) ? '★' : '☆'} Favoriet
           </button>
-
-
-
         </div>
       `).join('');
-      // Na movieDiv.innerHTML = ...;
+
       document.querySelectorAll('.fav-btn').forEach(button => {
-      button.addEventListener('click', () => {
-      const id = button.getAttribute('data-id');
-      addToFavorites(id);
-      // Knoptekst updaten:
-      button.textContent = isFavorite(id) ? '★ Favoriet' : '☆ Favoriet';
-  });
-});
+        button.addEventListener('click', () => {
+          const id = button.getAttribute('data-id');
+          addToFavorites(id);
+          button.textContent = isFavorite(id) ? '★ Favoriet' : '☆ Favoriet';
+        });
+      });
+
+      lazyLoadImages();
 
     } else {
-      movieDiv.innerHTML = `<p>Geen films gevonden voor "${searchTerm}".</p>`;
+      movieDiv.innerHTML = `<p>Geen films gevonden.</p>`;
     }
   } catch (error) {
     movieDiv.innerHTML = `<p>Kon de films niet ophalen.</p>`;
     console.error(error);
+  } finally {
+    loadingDiv.style.display = 'none';
   }
-  finally {
-    loadingDiv.style.display = 'none'; // Verberg loading
-  }
+}
+
+function lazyLoadImages() {
+  const images = document.querySelectorAll('img.lazy-img');
+  const options = {
+    root: null,
+    rootMargin: '0px',
+    threshold: 0.1
+  };
+
+  const observer = new IntersectionObserver((entries, observer) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const img = entry.target;
+        img.src = img.dataset.src;
+        img.classList.remove('lazy-img');
+        observer.unobserve(img);
+      }
+    });
+  }, options);
+
+  images.forEach(img => observer.observe(img));
 }
 
 function handleSearch() {
   const term = searchInput.value.trim();
+  if (!term) return alert('Vul een filmtitel in.');
+  if (term.length < 2) return alert('De zoekterm moet minstens 2 tekens lang zijn.');
+  if (/[^a-zA-Z0-9\s]/.test(term)) return alert('Gebruik alleen letters en cijfers in de zoekopdracht.');
 
-  if (!term) {
-    alert('Vul een filmtitel in.');
-    return;
-  }
-
-  if (term.length < 2) {
-    alert('De zoekterm moet minstens 2 tekens lang zijn.');
-    return;
-  }
-
-  const invalidChars = /[^a-zA-Z0-9\s]/;
-  if (invalidChars.test(term)) {
-    alert('Gebruik alleen letters en cijfers in de zoekopdracht.');
-    return;
-  }
-
-  fetchMovies(term, sortSelect.value,filterType.value);
+  fetchMovies(term, sortSelect.value, filterType.value);
 }
 
-
 searchBtn.addEventListener('click', handleSearch);
-
-searchInput.addEventListener('keypress', e => {
-  if (e.key === 'Enter') handleSearch();
-});
+searchInput.addEventListener('keypress', e => e.key === 'Enter' && handleSearch());
 
 sortSelect.addEventListener('change', () => {
-  const term = searchInput.value.trim() || 'spider-man';
-  fetchMovies(term, sortSelect.value,filterType.value);
+  const term = searchInput.value.trim() || new Date().getFullYear().toString();
+  fetchMovies(term, sortSelect.value, filterType.value);
 });
-function addToFavorites(id) {
-  const existing = JSON.parse(localStorage.getItem('favorites')) || [];
 
-  if (!existing.includes(id)) {
-    existing.push(id);
-    localStorage.setItem('favorites', JSON.stringify(existing));
-    alert('Toegevoegd aan favorieten!');
-  } else {
-    alert('Deze film staat al in je favorieten.');
+filterType.addEventListener('change', () => {
+  const term = searchInput.value.trim() || new Date().getFullYear().toString();
+  fetchMovies(term, sortSelect.value, filterType.value);
+});
+
+filterRating.addEventListener('input', () => {
+  const term = searchInput.value.trim() || new Date().getFullYear().toString();
+  fetchMovies(term, sortSelect.value, filterType.value);
+});
+
+function addToFavorites(id) {
+  try {
+    const existing = JSON.parse(localStorage.getItem('favorites')) || [];
+    if (!existing.includes(id)) {
+      existing.push(id);
+      localStorage.setItem('favorites', JSON.stringify(existing));
+      alert('Toegevoegd aan favorieten!');
+    } else {
+      alert('Deze film staat al in je favorieten.');
+    }
+  } catch (err) {
+    console.error("Kan favoriet niet opslaan:", err);
   }
 }
 
@@ -132,24 +178,31 @@ function isFavorite(id) {
 window.addToFavorites = addToFavorites;
 window.isFavorite = isFavorite;
 
+// THEMA TOGGLE
 const themeToggle = document.getElementById('themeToggle');
+const themes = ['light', 'dark'];
+const savedTheme = localStorage.getItem('theme') || 'light';
+document.body.classList.add(savedTheme);
 
-// Zet opgeslagen thema bij opstart
-document.body.classList.add(localStorage.getItem('theme') || 'light');
-
-// Toggle logica
 themeToggle.addEventListener('click', () => {
-  const currentTheme = document.body.classList.contains('dark') ? 'dark' : 'light';
+  const currentTheme = themes.find(t => document.body.classList.contains(t)) || 'light';
   const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-  document.body.classList.remove(currentTheme);
-  document.body.classList.add(newTheme);
+  document.body.classList.replace(currentTheme, newTheme);
   localStorage.setItem('theme', newTheme);
 });
-filterType.addEventListener('change', () => {
-  const term = searchInput.value.trim() || 'spider-man';
-  fetchMovies(term, sortSelect.value, filterType.value);
-});
 
+// Ga naar home en reset filters
+function goToHome() {
+  searchInput.value = '';
+  filterYear.value = '';
+  filterRating.value = '';
+  filterType.value = '';
+  sortSelect.value = 'year-desc';
+  const year = new Date().getFullYear().toString();
+  fetchMovies(year, 'year-desc', '', year);
+}
+window.goToHome = goToHome;
 
-// Initial load
-fetchMovies();
+// Initiale fetch bij laden
+const currentYear = new Date().getFullYear().toString();
+fetchMovies(currentYear, 'year-desc', '', currentYear);

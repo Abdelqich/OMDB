@@ -35,12 +35,28 @@ async function renderFavorites() {
     .map(movie => `
       <div class="movie-item">
         <h3>${movie.Title} (${movie.Year})</h3>
-        <img src="${movie.Poster !== 'N/A' ? movie.Poster : '/no-poster.png'}" width="150" alt="${movie.Title}" />
+        <img 
+          src="${movie.Poster !== 'N/A' ? movie.Poster : '/no.png'}" 
+          width="150" 
+          alt="Poster van ${movie.Title}" 
+          onerror="this.onerror=null;this.src='/no.png';"
+        />
         <p>${movie.Genre}</p>
-        <a href="detail.html?id=${movie.imdbID}">Bekijk details</a>
+        <a href="details.html?id=${movie.imdbID}">Bekijk details</a>
         <button onclick="removeFromFavorites('${movie.imdbID}')">🗑 Verwijder</button>
       </div>
     `).join('');
+
+  const terugBtn = document.getElementById('terugnaarzoeken');
+  if (terugBtn) {
+    terugBtn.addEventListener('click', () => {
+      window.location.href = 'index.html';
+    });
+  }
 }
+
+// THEMA FIX
+const savedTheme = localStorage.getItem('theme') || 'light';
+document.body.classList.add(savedTheme);
 
 renderFavorites();
